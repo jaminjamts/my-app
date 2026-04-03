@@ -1,16 +1,10 @@
-import { Link } from "expo-router";
-import React from "react";
-import { Text, View } from "react-native";
+import { View } from "react-native";
+import Auth from "../../components/Auth";
 
-const Signin = () => {
+export default function SignIn() {
   return (
-    <View>
-      <Text>Signin</Text>
-      <Link href="/(auth)/sign-up" className="text-blue-500">
-        Create account
-      </Link>
+    <View style={{ flex: 1, justifyContent: "center", padding: 16 }}>
+      <Auth />
     </View>
   );
-};
-
-export default Signin;
+}

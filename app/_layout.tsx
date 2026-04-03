@@ -1,9 +1,17 @@
 import "../global.css";
 
+import { Session } from "@supabase/supabase-js";
 import { useFonts } from "expo-font";
-import { SplashScreen, Stack } from "expo-router";
-import { useEffect } from "react";
+import { SplashScreen, Stack, useRouter, useSegments } from "expo-router";
+import { useEffect, useState } from "react";
+import { supabase } from "../lib/supabase";
+
 export default function RootLayout() {
+  const [session, setSession] = useState<Session | null>(null);
+  const [ready, setReady] = useState(false);
+  const router = useRouter();
+  const segments = useSegments();
+
   const [fontsLoaded] = useFonts({
     "sans-regular": require("../assets/fonts/PlusJakartaSans-Regular.ttf"),
     "sans-medium": require("../assets/fonts/PlusJakartaSans-Medium.ttf"),
@@ -14,6 +22,32 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setReady(true);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+  useEffect(() => {
+    if (!ready) return;
+
+    const inAuth = segments[0] === "(auth)";
+
+    if (!session && !inAuth) {
+      router.replace("/(auth)/sign-in");
+    } else if (session && inAuth) {
+      router.replace("/(tabs)");
+    }
+  }, [session, ready, segments]);
+
+  useEffect(() => {
     if (fontsLoaded) {
       SplashScreen.hideAsync();
     }
@@ -22,5 +56,6 @@ export default function RootLayout() {
   if (!fontsLoaded) {
     return null;
   }
+
   return <Stack screenOptions={{ headerShown: false }} />;
 }
